@@ -7,35 +7,9 @@ package database
 
 import (
 	"context"
-	"time"
 
 	"github.com/google/uuid"
 )
-
-const changePasswordByUsername = `-- name: ChangePasswordByUsername :one
-UPDATE users
-SET hashed_password = $1 AND updated_at = NOW()
-WHERE username = $2
-RETURNING id, username, updated_at
-`
-
-type ChangePasswordByUsernameParams struct {
-	HashedPassword string
-	Username       string
-}
-
-type ChangePasswordByUsernameRow struct {
-	ID        uuid.UUID
-	Username  string
-	UpdatedAt time.Time
-}
-
-func (q *Queries) ChangePasswordByUsername(ctx context.Context, arg ChangePasswordByUsernameParams) (ChangePasswordByUsernameRow, error) {
-	row := q.db.QueryRowContext(ctx, changePasswordByUsername, arg.HashedPassword, arg.Username)
-	var i ChangePasswordByUsernameRow
-	err := row.Scan(&i.ID, &i.Username, &i.UpdatedAt)
-	return i, err
-}
 
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (id, username, hashed_password, created_at, updated_at)
@@ -101,6 +75,25 @@ func (q *Queries) GetAllUsers(ctx context.Context) ([]User, error) {
 	return items, nil
 }
 
+const getUserByID = `-- name: GetUserByID :one
+SELECT id, username, hashed_password, created_at, updated_at 
+FROM users
+WHERE id = $1
+`
+
+func (q *Queries) GetUserByID(ctx context.Context, id uuid.UUID) (User, error) {
+	row := q.db.QueryRowContext(ctx, getUserByID, id)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Username,
+		&i.HashedPassword,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getUserByUsername = `-- name: GetUserByUsername :one
 SELECT id, username, hashed_password, created_at, updated_at
 FROM users
@@ -118,4 +111,22 @@ func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User,
 		&i.UpdatedAt,
 	)
 	return i, err
+}
+
+const updatePasswordById = `-- name: UpdatePasswordById :exec
+UPDATE users
+SET 
+    hashed_password = $1,
+    updated_at = NOW()
+WHERE id = $2
+`
+
+type UpdatePasswordByIdParams struct {
+	HashedPassword string
+	ID             uuid.UUID
+}
+
+func (q *Queries) UpdatePasswordById(ctx context.Context, arg UpdatePasswordByIdParams) error {
+	_, err := q.db.ExecContext(ctx, updatePasswordById, arg.HashedPassword, arg.ID)
+	return err
 }

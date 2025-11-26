@@ -9,6 +9,11 @@ VALUES (
 )
 RETURNING *;
 
+-- name: GetUserByID :one
+SELECT * 
+FROM users
+WHERE id = $1;
+
 -- name: GetUserByUsername :one
 SELECT *
 FROM users
@@ -18,8 +23,9 @@ WHERE username = $1;
 SELECT *
 FROM users;
 
--- name: ChangePasswordByUsername :one
+-- name: UpdatePasswordById :exec
 UPDATE users
-SET hashed_password = $1 AND updated_at = NOW()
-WHERE username = $2
-RETURNING id, username, updated_at;
+SET 
+    hashed_password = $1,
+    updated_at = NOW()
+WHERE id = $2;
