@@ -30,3 +30,6 @@ func (s *Service) Register(ctx context.Context, username, password string) (db.U
 	}
 	return user, nil
 }
+
+func (s *Service) changePasswordByUsername(ctx context.Context, new_password, username string)
+	user, err := s.database.
