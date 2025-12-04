@@ -2,7 +2,9 @@ package users
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"net/http"
 
 	"github.com/angelchiav/interstate-go/internal/database"
 	db "github.com/angelchiav/interstate-go/internal/database"
@@ -17,7 +19,7 @@ func NewService(db *db.Queries) *Service {
 	return &Service{database: db}
 }
 
-func (s *Service) Register(ctx context.Context, username, password string) (db.User, error) {
+func (s *Service) handlerRegister(ctx context.Context, username, password string) (db.User, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return db.User{}, fmt.Errorf("the user cannot be created")
@@ -32,7 +34,7 @@ func (s *Service) Register(ctx context.Context, username, password string) (db.U
 	return user, nil
 }
 
-func (s *Service) ChangePasswordByUsername(ctx context.Context, new_password, username string) error {
+func (s *Service) handlerChangePasswordByUsername(ctx context.Context, new_password, username string) error {
 	user, err := s.database.GetUserByUsername(ctx, username)
 	if err != nil {
 		return err
@@ -52,4 +54,25 @@ func (s *Service) ChangePasswordByUsername(ctx context.Context, new_password, us
 	}
 
 	return nil
+}
+
+func (s *Service) handlerLogin(w http.ResponseWriter, r *http.Request) {
+	type parameters struct {
+		Username string `json:"username"`
+		Password string `json:"password"`
+	}
+
+	var params parameters
+
+	decoder := json.NewDecoder(r.Body)
+	if err := decoder.Decode(&params); err != nil {
+		http.Error(w, "couldn't decode parameters", http.StatusBadRequest)
+		return
+	}
+
+	user, err := s.database.GetUserByUsername(r.Context(), params.Username)
+	if err != nil {
+		http.Error(w, "username doesn't exists", http.StatusNotFound)
+		return
+	}
 }
