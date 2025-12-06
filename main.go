@@ -34,6 +34,11 @@ func main() {
 
 	apiCfg := &apiConfig{
 		database: dbQueries,
-		env:	os.Getenv("PORT")
+		env:	os.Getenv("PORT"),
 	}
+
+	appHandler := http.StripPrefix("/app", http.FileServer(http.Dir(filepathRoot)))
+	mux.Handle("/app/", appHandler)
+
+	mux.HandleFunc("GET")
 }

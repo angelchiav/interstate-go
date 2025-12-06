@@ -25,3 +25,7 @@ SET
     updated_at = NOW()
 WHERE user_id = $2;
 
+-- name: GetAllPostsByID :many
+SELECT *
+FROM posts
+WHERE id = $1;

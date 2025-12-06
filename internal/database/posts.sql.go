@@ -69,6 +69,41 @@ func (q *Queries) EditPostBodyByID(ctx context.Context, arg EditPostBodyByIDPara
 	return err
 }
 
+const getAllPostsByID = `-- name: GetAllPostsByID :many
+SELECT id, body, user_id, created_at, updated_at
+FROM posts
+WHERE id = $1
+`
+
+func (q *Queries) GetAllPostsByID(ctx context.Context, id uuid.UUID) ([]Post, error) {
+	rows, err := q.db.QueryContext(ctx, getAllPostsByID, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Post
+	for rows.Next() {
+		var i Post
+		if err := rows.Scan(
+			&i.ID,
+			&i.Body,
+			&i.UserID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getPostByID = `-- name: GetPostByID :one
 SELECT id, body, user_id, created_at, updated_at
 FROM posts
