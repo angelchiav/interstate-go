@@ -2,6 +2,7 @@ package posts
 
 import (
 	"context"
+	"fmt"
 
 	db "github.com/angelchiav/interstate-go/internal/database"
 	"github.com/google/uuid"
@@ -25,4 +26,8 @@ func (s *Service) CreatePost(ctx context.Context, body string, userID uuid.UUID)
 	}
 
 	return post, nil
+}
+
+func (s *Service) UpdatePost(ctx context.Context, new_body string, userID uuid.UUID) (db.Post, error) {
+	return db.Post{}, fmt.Errorf("")
 }
