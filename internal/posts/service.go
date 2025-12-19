@@ -25,6 +25,10 @@ func (s *Service) CreatePost(ctx context.Context, body string, userID uuid.UUID)
 		return db.Post{}, err
 	}
 
+	if len(body) <= 0 {
+		return nil, fmt.Errorf("body cannot be empty: %v", err)
+	}
+
 	return post, nil
 }
 
